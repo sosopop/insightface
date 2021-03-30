@@ -2,6 +2,7 @@ import torch
 import torch
 import os
 import backbones
+import cv2
 
 from torch import nn
 import torchvision.transforms as transforms
@@ -37,12 +38,17 @@ class FaceFeature(object):
         return img_tensors.to(self.device)
 
     def inference_tensor(self, img_list):
-        tensor = self.img_to_tensor(img_list)
-        return self.model(tensor)
+        return self.model(img_list)
+
+    def inference_cv(self, img_list):
+        for idx, img in enumerate(img_list):
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img_list[idx] = torch.from_numpy(img.transpose((2, 0, 1)))
+        return self.inference_np(img_list)
 
     def inference_np(self, img_list):
-        tensor = self.img_to_tensor(img_list)
-        return self.model(tensor).data.cpu().numpy()
+        img_list = self.img_to_tensor(img_list)
+        return self.inference_tensor(img_list).data.cpu().numpy()
 
     def similarity_np(self, feature1, feature2):
         return self.cos(torch.from_numpy(feature1), torch.from_numpy(feature2)).data.cpu().numpy()
@@ -50,38 +56,33 @@ class FaceFeature(object):
     def similarity_tensor(self, feature1, feature2):
         return self.cos(feature1, feature2)
 
-    def test(self):
-        # from torchscope import scope
-        # scope(self.model, input_size=(3, 112, 112))
-        # x = torch.randn(2, 3, 112, 112).to(self.device)
-        
-        import cv2
-        img1 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0001.jpg", cv2.IMREAD_COLOR)
-        img2 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0002.jpg", cv2.IMREAD_COLOR)
-        img3 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Eckhart/Aaron_Eckhart_0001.jpg", cv2.IMREAD_COLOR)
-        img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB)
-        img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
-        img3 = cv2.cvtColor(img3, cv2.COLOR_BGR2RGB)
-        
-        img1 = torch.from_numpy(img1.transpose((2, 0, 1)))
-        img2 = torch.from_numpy(img2.transpose((2, 0, 1)))
-        img3 = torch.from_numpy(img3.transpose((2, 0, 1)))
 
-        y = self.inference_np([img1, img2])
-        sim = self.similarity_np(y[0], y[1])
-        print(sim)
-        
-        y = self.inference_np([img1, img3])
-        sim = self.similarity_np(y[0], y[1])
-        print(sim)
-        
-        y = self.inference_np([img2, img3])
-        sim = self.similarity_np(y[0], y[1])
-        print(sim)
-        # y = y.cpu().detach().numpy()
-        # self.similarity(y[0], y[1])
+if __name__ == "__main__":
+    face_feature = FaceFeature(
+        "iresnet100", "ms1mv3_arcface_r100_fp16/backbone.pth", False)
+    # face_feature = FaceFeature(
+    #     "mobilefacenetv3", "ms1mv3_arcface_mbfacenetv3/backbone.pth", False)
+    # face_feature = FaceFeature(
+    #     "mobilefacenet", "ms1mv3_arcface_mbfacenet/backbone.pth", True)
+
+    img1 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0001.jpg", cv2.IMREAD_COLOR)
+    img2 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0002.jpg", cv2.IMREAD_COLOR)
+    img3 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Eckhart/Aaron_Eckhart_0001.jpg", cv2.IMREAD_COLOR)
+    import time 
+    torch.cuda.synchronize()
+    begin = time.time()
+    for i in range(10):
+        y = face_feature.inference_cv([img1, img2, img3])
+        sim = face_feature.similarity_np(y[0], y[1])
+        sim = face_feature.similarity_np(y[0], y[2])
+    torch.cuda.synchronize()
+    end = time.time()
+    print(end-begin) 
 
 
-face_feature = FaceFeature(
-    "mobilefacenetv3", "ms1mv3_arcface_mbfacenetv3/backbone.pth", True)
-face_feature.test()
+    sim = face_feature.similarity_np(y[0], y[1])
+    print(sim)
+    sim = face_feature.similarity_np(y[0], y[2])
+    print(sim)
+    sim = face_feature.similarity_np(y[1], y[2])
+    print(sim)
