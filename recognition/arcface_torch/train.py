@@ -30,7 +30,7 @@ def main(args):
     local_rank = args.local_rank
     torch.cuda.set_device(local_rank)
 
-    if not os.path.exists(cfg.output) and rank is 0:
+    if not os.path.exists(cfg.output) and rank == 0:
         os.makedirs(cfg.output)
     else:
         time.sleep(2)
@@ -44,14 +44,14 @@ def main(args):
         local_rank=local_rank, dataset=trainset, batch_size=cfg.batch_size,
         sampler=train_sampler, num_workers=0, pin_memory=True, drop_last=True)
 
-    dropout = 0.4 if cfg.dataset is "webface" else 0
+    dropout = 0.4 if cfg.dataset == "webface" else 0
     backbone = eval("backbones.{}".format(args.network))(False, dropout=dropout, fp16=cfg.fp16).to(local_rank)
 
     if args.resume:
         try:
             backbone_pth = os.path.join(cfg.output, "backbone.pth")
             backbone.load_state_dict(torch.load(backbone_pth, map_location=torch.device(local_rank)))
-            if rank is 0:
+            if rank == 0:
                 logging.info("backbone resume successfully!")
         except (FileNotFoundError, KeyError, IndexError, RuntimeError):
             logging.info("resume fail, backbone init successfully!")
@@ -84,7 +84,7 @@ def main(args):
 
     start_epoch = 0
     total_step = int(len(trainset) / cfg.batch_size / world_size * cfg.num_epoch)
-    if rank is 0: logging.info("Total Step is: %d" % total_step)
+    if rank == 0: logging.info("Total Step is: %d" % total_step)
 
     callback_verification = CallBackVerification(2000, rank, cfg.val_targets, cfg.rec)
     callback_logging = CallBackLogging(50, rank, total_step, cfg.batch_size, world_size, None)

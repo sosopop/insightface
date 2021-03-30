@@ -2,14 +2,14 @@ from easydict import EasyDict as edict
 
 config = edict()
 config.dataset = "ms1m-retinaface-t2"
-config.embedding_size = 512
+config.embedding_size = 128
 config.sample_rate = 1
 config.fp16 = False
 config.momentum = 0.9
 config.weight_decay = 5e-4
 config.batch_size = 64
 config.lr = 0.1  # batch size is 512
-config.output = "ms1mv3_arcface_r50"
+config.output = "ms1mv3_arcface_mbfacenetv3"
 
 if config.dataset == "emore":
     config.rec = "/train_tmp/faces_emore"
@@ -25,11 +25,13 @@ if config.dataset == "emore":
     config.lr_func = lr_step_func
 
 elif config.dataset == "ms1m-retinaface-t2":
-    config.rec = "/train_tmp/ms1m-retinaface-t2"
+    #config.rec = "/tmp/ramdisk/ms1m-retinaface-t1"
+    config.rec = "/media/mengchao/dataset/ms1m-retinaface-t1"
     config.num_classes = 91180
-    config.num_epoch = 25
+    config.num_epoch = 30
     config.warmup_epoch = -1
     config.val_targets = ["lfw", "cfp_fp", "agedb_30"]
+    #config.val_targets = ["lfw"]
 
     def lr_step_func(epoch):
         return ((epoch + 1) / (4 + 1)) ** 2 if epoch < -1 else 0.1 ** len(

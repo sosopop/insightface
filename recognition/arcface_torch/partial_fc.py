@@ -145,6 +145,9 @@ class PartialFC(Module):
             loss[index] = grad[index].gather(1, total_label[index, None])
             dist.all_reduce(loss, dist.ReduceOp.SUM)
             loss_v = loss.clamp_min_(1e-30).log_().mean() * (-1)
+            if not loss_v:
+                print(loss, loss_v)
+                os._exit()
 
             # calculate grad
             grad[index] -= one_hot
