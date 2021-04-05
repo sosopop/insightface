@@ -144,3 +144,11 @@ class MobileFaceNetV3(nn.Module):
 
 def mobilefacenetv3():
     return MobileFaceNetV3(feature_dim=128)
+
+if __name__ == "__main__":
+    from torchscope import scope
+    net = mobilefacenetv3()
+    scope(net, input_size=(3, 112, 112))
+    x = torch.randn(2,3,112,112)
+    y = net(x)
+    print(y.size())

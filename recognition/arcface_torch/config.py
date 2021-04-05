@@ -9,7 +9,8 @@ config.momentum = 0.9
 config.weight_decay = 5e-4
 config.batch_size = 64
 config.lr = 0.1  # batch size is 512
-config.output = "ms1mv3_arcface_mbfacenetv3"
+# config.output = "ms1mv3_arcface_iresnet100"
+config.output = "ms1mv3_arcface_mbfacenetv3_test"
 
 if config.dataset == "emore":
     config.rec = "/train_tmp/faces_emore"
@@ -28,7 +29,7 @@ elif config.dataset == "ms1m-retinaface-t2":
     #config.rec = "/tmp/ramdisk/ms1m-retinaface-t1"
     config.rec = "/media/mengchao/dataset/ms1m-retinaface-t1"
     config.num_classes = 91180
-    config.num_epoch = 30
+    config.num_epoch = 25
     config.warmup_epoch = -1
     config.val_targets = ["lfw", "cfp_fp", "agedb_30"]
     #config.val_targets = ["lfw"]

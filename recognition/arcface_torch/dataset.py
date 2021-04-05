@@ -101,6 +101,7 @@ class MXFaceDataset(Dataset):
         sample = mx.image.imdecode(img).asnumpy()
         if self.transform is not None:
             sample = self.transform(sample)
+        #sample = transforms.functional.crop(sample, 0, 0, 112, 56)
         return sample, label
 
     def __len__(self):
