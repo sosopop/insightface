@@ -365,8 +365,10 @@ class MobileFaceNetV3(nn.Module):
         self.bn2 = nn.BatchNorm2d(512)
         self.hs2 = hswish()
 
-        self.conv3 = nn.Conv2d(512, 512, kernel_size=7, stride=1, padding=0, groups=512, bias=False)
+        self.conv3 = nn.Conv2d(512, 512, kernel_size=4, stride=1, padding=0, groups=512, bias=False)
         self.bn3 = nn.BatchNorm2d(512)
+
+        self.pool = nn.MaxPool2d(1, 4)
 
         self.conv4 = nn.Conv2d(512, feature_dim, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn4 = nn.BatchNorm2d(feature_dim)
@@ -405,6 +407,7 @@ class MobileFaceNetV3(nn.Module):
         out = self.bneck(out)
         out = self.hs2(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
+        out = self.pool(out)
         out = self.bn4(self.conv4(out))
         out = out.view(out.size(0), -1)
         return out
@@ -465,13 +468,12 @@ class MobileFaceNetV3(nn.Module):
 
 # test()
 
-# if __name__ == "__main__":
-#     input = torch.Tensor(2, 3, 112, 112)
-#     net = MobileFaceNet()
-#     print(net)
-
-#     x = net(input)
-#     print(x.shape)
+if __name__ == "__main__":
+    input = torch.Tensor(2, 3, 112, 56)
+    net = MobileFaceNetV3()
+    print(net)
+    x = net(input)
+    print(x.shape)
 
 def mbv3(pretrained=False, progress=True, **kwargs):
     # return MobileNetV3_Small(feature_dim=128)
