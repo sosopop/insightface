@@ -3,6 +3,7 @@ import torch
 import os
 import backbones
 import cv2
+import time 
 
 from torch import nn
 import torchvision.transforms as transforms
@@ -31,7 +32,7 @@ class FaceFeature(object):
         return net
 
     def img_to_tensor(self, img_list):
-        img_tensors = torch.empty(len(img_list), 3, 112, 112)
+        img_tensors = torch.empty(len(img_list), *img_list[0].size())
         for idx, img in enumerate(img_list):
             img = transform(img)
             img_tensors[idx,:,:,:] = img
@@ -56,33 +57,63 @@ class FaceFeature(object):
     def similarity_tensor(self, feature1, feature2):
         return self.cos(feature1, feature2)
 
-
 if __name__ == "__main__":
     face_feature = FaceFeature(
         "iresnet100", "ms1mv3_arcface_r100_fp16/backbone.pth", False)
     # face_feature = FaceFeature(
-    #     "mobilefacenetv3", "ms1mv3_arcface_mbfacenetv3/backbone.pth", False)
+    #     "mbv3", "ms1mv3_arcface_mbfacenetv3_test/backbone.pth", False)
     # face_feature = FaceFeature(
     #     "mobilefacenet", "ms1mv3_arcface_mbfacenet/backbone.pth", True)
 
-    img1 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0001.jpg", cv2.IMREAD_COLOR)
-    img2 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0002.jpg", cv2.IMREAD_COLOR)
-    img3 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Eckhart/Aaron_Eckhart_0001.jpg", cv2.IMREAD_COLOR)
-    import time 
-    torch.cuda.synchronize()
-    begin = time.time()
-    for i in range(10):
-        y = face_feature.inference_cv([img1, img2, img3])
-        sim = face_feature.similarity_np(y[0], y[1])
-        sim = face_feature.similarity_np(y[0], y[2])
-    torch.cuda.synchronize()
-    end = time.time()
-    print(end-begin) 
+    # test_image_path =[
+    #     "aligned_mask_0_baby1.jpg",
+    #     "aligned_mask_0_baby2.jpg",
+    #     "aligned_mask_0_baby3.jpg",
+    #     "aligned_mask_0_huangxiaoming1.jpg",
+    #     "aligned_mask_0_huangxiaoming2.jpg",
+    #     "aligned_mask_0_huangxiaoming3.jpg",
+    #     "aligned_mask_0_wuyanzu1.jpg",
+    #     "aligned_mask_0_wuyanzu2.jpg",
+    #     "aligned_mask_0_wuyanzu3.jpg",
+    #     "aligned_mask_0_luhan1.jpg",
+    #     "aligned_mask_0_luhan2.jpg",
+    #     "aligned_mask_0_luhan3.jpg",
+    #     "aligned_mask_0_yangmi1.jpg",
+    #     "aligned_mask_0_yangmi2.jpg",
+    #     "aligned_mask_0_yangmi3.jpg",
+    #     "aligned_mask_0_fanbingbing.jpg",
+    # ]
 
+    test_image_path =[
+        "aligned_0_baby1.jpg",
+        "aligned_0_baby2.jpg",
+        "aligned_0_baby3.jpg",
+        "aligned_0_huangxiaoming1.jpg",
+        "aligned_0_huangxiaoming2.jpg",
+        "aligned_0_huangxiaoming3.jpg",
+        "aligned_0_wuyanzu1.jpg",
+        "aligned_0_wuyanzu2.jpg",
+        "aligned_0_wuyanzu3.jpg",
+        "aligned_0_luhan1.jpg",
+        "aligned_0_luhan2.jpg",
+        "aligned_0_luhan3.jpg",
+        "aligned_0_yangmi1.jpg",
+        "aligned_0_yangmi2.jpg",
+        "aligned_0_yangmi3.jpg",
+        "aligned_0_fanbingbing.jpg",
+    ]
+    imgs = []
+    for image_path in test_image_path:
+        img = cv2.imread(os.path.join("/media/mengchao/code/face/test/facedetect/output/", image_path), cv2.IMREAD_COLOR)
+        imgs.append({'name': image_path, 'img': img})
 
-    sim = face_feature.similarity_np(y[0], y[1])
-    print(sim)
-    sim = face_feature.similarity_np(y[0], y[2])
-    print(sim)
-    sim = face_feature.similarity_np(y[1], y[2])
-    print(sim)
+    for data1 in imgs:
+        sorted_map = {}
+        for data2 in imgs:
+            y = face_feature.inference_cv([data1['img'], data2['img']])
+            sim = face_feature.similarity_np(y[0], y[1])
+            sorted_map[float(sim)] = data2['name']
+        sorted_map = [(k,sorted_map[k]) for k in sorted(sorted_map.keys(), reverse=True)]
+        for i in range(4):
+            print(sorted_map[i][1], sorted_map[i][0])
+        print('---------------------------')
