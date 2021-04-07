@@ -13,6 +13,7 @@ transform = transforms.Compose([
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))  # range [0.0, 1.0] -> [-1.0,1.0]
     ])
 
+
 class FaceFeature(object):
     def __init__(self, network, checkpoint, cuda):
         self.model = self.load_model(network, checkpoint, cuda)
@@ -59,7 +60,9 @@ class FaceFeature(object):
 
 if __name__ == "__main__":
     face_feature = FaceFeature(
-        "iresnet100", "ms1mv3_arcface_r100_fp16/backbone.pth", False)
+        "iresnet100", "ms1mv3_arcface_r100_fp16/backbone.pth", True)
+    # face_feature = FaceFeature(
+    #     "iresnet100", "ms1mv3_arcface_iresnet100/backbone.pth", False)
     # face_feature = FaceFeature(
     #     "mobilefacenetv3", "ms1mv3_arcface_mbfacenetv3/backbone.pth", False)
     # face_feature = FaceFeature(
