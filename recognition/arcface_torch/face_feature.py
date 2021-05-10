@@ -68,6 +68,28 @@ if __name__ == "__main__":
     # face_feature = FaceFeature(
     #     "mobilefacenet", "ms1mv3_arcface_mbfacenet/backbone.pth", True)
 
+    # img1 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0001.jpg", cv2.IMREAD_COLOR)
+    # img2 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0002.jpg", cv2.IMREAD_COLOR)
+    # img3 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Eckhart/Aaron_Eckhart_0001.jpg", cv2.IMREAD_COLOR)
+    # import time 
+    # torch.cuda.synchronize()
+    # begin = time.time()
+    # for i in range(10):
+    #     y = face_feature.inference_cv([img1, img2, img3])
+    #     sim = face_feature.similarity_np(y[0], y[1])
+    #     sim = face_feature.similarity_np(y[0], y[2])
+    # torch.cuda.synchronize()
+    # end = time.time()
+    # print(end-begin) 
+
+
+    # sim = face_feature.similarity_np(y[0], y[1])
+    # print(sim)
+    # sim = face_feature.similarity_np(y[0], y[2])
+    # print(sim)
+    # sim = face_feature.similarity_np(y[1], y[2])
+    # print(sim)
+
     img1 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0001.jpg", cv2.IMREAD_COLOR)
     img2 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Peirsol/Aaron_Peirsol_0002.jpg", cv2.IMREAD_COLOR)
     img3 = cv2.imread("/media/mengchao/dataset/feature/LFW/lfw_align_112/Aaron_Eckhart/Aaron_Eckhart_0001.jpg", cv2.IMREAD_COLOR)

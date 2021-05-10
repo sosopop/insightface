@@ -332,36 +332,36 @@ class MobileNetV3_Small(nn.Module):
         #out = self.linear4(out)
         return out
 
+
 MobileFaceNetV3_BottleNeck_Setting = [
     # t, c , n ,s
-    [2, 64, 5, 2, 3],
-    [4, 128, 1, 2, 3],
-    [2, 128, 6, 1, 5],
-    [4, 128, 1, 2, 5],
-    [2, 128, 2, 1, 5]
+    [2, 32, 1, 1, 3],
+    [2, 32, 1, 2, 3],
+    [2, 64, 1, 1, 3],
+    [2, 64, 1, 2, 3],
+    [2, 128, 1, 1, 3],
+    [2, 128, 1, 2, 3],
+    [2, 256, 1, 1, 5],
+    [2, 512, 1, 1, 5]
 ]
 
 class MobileFaceNetV3(nn.Module):
     def __init__(self, feature_dim=128):
         super(MobileFaceNetV3, self).__init__()
         
-        self.cur_channel = 64
+        self.cur_channel = 32
 
-        # self.conv1 = ConvBlock(3, 64, 3, 2, 1)
-        # self.dw_conv1 = ConvBlock(64, 64, 3, 1, 1, dw=True)
-
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1, bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(32)
         self.hs1 = hswish()
-
         
-        self.dw_conv1 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, groups=64, bias=False)
-        self.dw_bn1 = nn.BatchNorm2d(64)
+        self.dw_conv1 = nn.Conv2d(32, 32, kernel_size=3, stride=1, padding=1, groups=32, bias=False)
+        self.dw_bn1 = nn.BatchNorm2d(32)
         self.dw_hs1 = hswish()
 
         self.bneck = self._make_layer(Block, MobileFaceNetV3_BottleNeck_Setting)
 
-        self.conv2 = nn.Conv2d(128, 512, kernel_size=1, stride=1, padding=0, bias=False)
+        self.conv2 = nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn2 = nn.BatchNorm2d(512)
         self.hs2 = hswish()
 
@@ -403,13 +403,119 @@ class MobileFaceNetV3(nn.Module):
         out = self.hs1(self.bn1(self.conv1(x)))
         out = self.dw_hs1(self.dw_bn1(self.dw_conv1(out)))
         out = self.bneck(out)
-        out = self.hs2(self.bn2(self.conv2(out)))
+        # out = self.hs2(self.bn2(self.conv2(out)))
         out = self.bn3(self.conv3(out))
         out = self.bn4(self.conv4(out))
         out = out.view(out.size(0), -1)
         return out
 
 
+
+class MobileNetV3_NewSmall(nn.Module):
+    def __init__(self, feature_dim=128):
+        super(MobileNetV3_NewSmall, self).__init__()
+        self.conv1 = nn.Conv2d(3, 16, kernel_size=3, stride=2, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(16)
+        self.hs1 = hswish()
+        #kernel_size, in_size, expand_size, out_size, nolinear, semodule, stride
+        self.bneck = nn.Sequential(
+            Block(3, 16, 16, 16, nn.ReLU(inplace=True), SeModule(16), 2),
+            Block(3, 16, 72, 24, nn.ReLU(inplace=True), None, 2),
+            Block(3, 24, 88, 24, nn.ReLU(inplace=True), None, 1),
+            Block(5, 24, 96, 40, hswish(), SeModule(40), 2),
+            Block(5, 40, 240, 40, hswish(), SeModule(40), 1),
+            Block(5, 40, 240, 40, hswish(), SeModule(40), 1),
+            Block(5, 40, 120, 48, hswish(), SeModule(48), 1),
+            Block(5, 48, 144, 48, hswish(), SeModule(48), 1),
+            Block(5, 48, 288, 96, hswish(), SeModule(96), 1),
+        )
+        self.bneck1 = nn.Sequential(
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+        )
+        self.bneck2 = nn.Sequential(
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+        )
+        self.bneck3 = nn.Sequential(
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+        )
+        self.bneck4 = nn.Sequential(
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+            Block(5, 96, 576, 96, hswish(), SeModule(96), 1),
+        )
+        # V1
+        # MobileFaceNet_BottleNeck_Setting = [
+        #     # t, c , n ,s
+        #     [2, 64, 5, 2],
+        #     [4, 128, 1, 2],
+        #     [2, 128, 6, 1],
+        #     [4, 128, 1, 2],
+        #     [2, 128, 2, 1]
+        # ]
+        # inp, oup, stride, expansion
+        # layers.append(block(self.cur_channel, c, s, t))
+        # self.conv2 = ConvBlock(128, 512, 1, 1, 0)
+
+        self.conv2 = nn.Conv2d(96, 512, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn2 = nn.BatchNorm2d(512)
+        self.hs2 = hswish()
+
+        self.conv3 = nn.Conv2d(512, 512, kernel_size=7, stride=1, padding=0, groups=512, bias=False)
+        self.bn3 = nn.BatchNorm2d(512)
+
+        self.conv4 = nn.Conv2d(512, feature_dim, kernel_size=1, stride=1, padding=0, bias=False)
+        self.bn4 = nn.BatchNorm2d(feature_dim)
+
+        self.bn21 = nn.BatchNorm2d(96)
+        self.bn22 = nn.BatchNorm2d(96)
+        self.bn23 = nn.BatchNorm2d(96)
+        self.bn24 = nn.BatchNorm2d(96)
+        # self.linear3 = nn.Linear(512, feature_dim)
+        # self.bn3 = nn.BatchNorm1d(feature_dim)
+        # self.hs3 = hswish()
+        # self.linear4 = nn.Linear(1280, num_classes)
+        # self.linear7 = ConvBlock(512, 512, 7, 1, 0, dw=True, linear=True)
+        # self.linear1 = ConvBlock(512, feature_dim, 1, 1, 0, linear=True)
+        self.init_params()
+
+    def init_params(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                init.kaiming_normal_(m.weight, mode='fan_out')
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                init.constant_(m.weight, 1)
+                init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                init.normal_(m.weight, std=0.001)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+
+    def forward(self, x):
+        out = self.hs1(self.bn1(self.conv1(x)))
+        out = self.bneck(out)
+        out1 = self.bneck1(out)
+        out = self.bn21(out + out1)
+        out2 = self.bneck2(out)
+        out = self.bn22(out + out1 + out2)
+        out3 = self.bneck3(out)
+        out = self.bn23(out + out1 + out2 + out3)
+        out4 = self.bneck4(out)
+        out = self.bn24(out + out1 + out2 + out3 + out4)
+        out = self.hs2(self.bn2(self.conv2(out)))
+        out = self.bn3(self.conv3(out))
+        out = self.bn4(self.conv4(out))
+        # out = F.avg_pool2d(out, 7)
+        # out = self.linear7(out)
+        # out = self.linear1(out)
+        out = out.view(out.size(0), -1)
+        #out = self.bn3(self.linear3(out))
+        #out = self.hs3(self.bn3(self.linear3(out)))
+        #out = self.linear4(out)
+        return out
 
 # class MobileFaceNet(nn.Module):
 #     def __init__(self, feature_dim=128, bottleneck_setting=MobileFaceNet_BottleNeck_Setting):
@@ -465,19 +571,22 @@ class MobileFaceNetV3(nn.Module):
 
 # test()
 
-# if __name__ == "__main__":
-#     input = torch.Tensor(2, 3, 112, 112)
-#     net = MobileFaceNet()
-#     print(net)
 
-#     x = net(input)
-#     print(x.shape)
 
 def mbv3(pretrained=False, progress=True, **kwargs):
     # return MobileNetV3_Small(feature_dim=128)
     # return MobileNetV3_Large(feature_dim=128)
     # return MobileFaceNet(feature_dim=128)
-    return MobileFaceNetV3(feature_dim=128)
+    return MobileNetV3_NewSmall(feature_dim=128)
+
+
+if __name__ == "__main__":
+    from torchscope import scope
+    input = torch.Tensor(2, 3, 112, 112)
+    net = mbv3()
+    scope(net, input_size=(3, 112, 112))
+    x = net(input)
+    print(x.shape)
 
 # def test():
 #     from torchscope import scope
